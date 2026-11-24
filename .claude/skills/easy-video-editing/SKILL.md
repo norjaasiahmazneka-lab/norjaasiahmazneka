@@ -46,6 +46,15 @@ python3 ~/easy-edit/popcaps.py in.srt caps.ass --accent "FREE,WEIGHT"
 ffmpeg -i in.mp4 -vf "ass=caps.ass" -c:v libx264 -crf 18 -pix_fmt yuv420p -c:a copy -movflags +faststart out.mp4
 ```
 
+**Handwriting captions** (upright, neat, natural - like a handwritten card: dark text on a cream box, accent words pink-red, normal capitals)
+```bash
+python3 ~/easy-edit/popcaps.py in.srt caps.ass --look hand --accent "wanita,berat,badan"
+ffmpeg -i in.mp4 -vf "ass=caps.ass" -c:v libx264 -crf 18 -pix_fmt yuv420p -c:a copy -movflags +faststart out.mp4
+```
+Font is Mali Bold (installed by install.sh). Bigger/smaller: `--size 110`. All capitals: `--upper yes`.
+
+**No speech in the video?** (walking, b-roll) Whisper may invent words like "Terima kasih kerana menonton". Check with `volumedetect` and the contact sheet; if nobody talks, write the .srt by hand from the person's own text, split into 2-3 short lines across the video.
+
 **Plain captions burned in**
 ```bash
 ffmpeg -i in.mp4 -vf "subtitles=in.srt:force_style='FontName=Montserrat,FontSize=14,Bold=1,Outline=2,MarginV=60'" -c:v libx264 -crf 18 -pix_fmt yuv420p -c:a copy -movflags +faststart out.mp4
@@ -83,6 +92,12 @@ ffmpeg -i in.mp4 -filter_complex "[0:v]scale=1080:1920:force_original_aspect_rat
 ffmpeg -i in.mp4 -stream_loop -1 -i music.mp3 -filter_complex "[1:a]volume=0.15,afade=t=out:st=DUR-2:d=2[m];[0:a][m]amix=inputs=2:duration=first:normalize=0[a]" -map 0:v -map "[a]" -c:v copy -c:a aac -movflags +faststart out.mp4
 ```
 Replace `DUR-2` with the number (video length from ffprobe minus 2). `normalize=0` keeps the voice at full volume. Only music the person owns or is royalty-free. Never put song lyrics on screen.
+
+**Slow down** (0.65 = 35% slower, looks natural; 0.5 = 50%, dramatic slow-motion; 60 fps phone video stays smooth)
+```bash
+ffmpeg -i in.mp4 -filter_complex "[0:v]setpts=PTS/0.65,fps=30[v];[0:a]atempo=0.65[a]" -map "[v]" -map "[a]" -c:v libx264 -crf 18 -pix_fmt yuv420p -movflags +faststart out.mp4
+```
+Slow down first, then make captions, so caption times match.
 
 **Speed up 1.2x**
 ```bash
